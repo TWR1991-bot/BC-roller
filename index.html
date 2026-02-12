@@ -2,47 +2,56 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>薪昌股份有限公司 - 滾輪統計系統 V4</title>
+    <title>何鑫實業股份有限公司 - 滾輪統計系統</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <style>
-        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f4f4f9; padding: 20px; color: #333; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1, h2 { text-align: center; margin: 5px 0; }
+        :root {
+            --forest-green: #2d5a27;
+            --leaf-green: #4f772d;
+            --earth-brown: #91785d;
+            --sky-blue: #a3c4bc;
+            --river-blue: #588157;
+            --bg-color: #f1f3f2;
+        }
+
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg-color); padding: 20px; color: #333; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.05); border-top: 8px solid var(--forest-green); }
+        h1 { text-align: center; color: var(--forest-green); margin-bottom: 5px; }
+        h2 { text-align: center; color: var(--earth-brown); margin-top: 0; font-size: 1.2rem; }
         
-        /* 頁籤樣式 */
-        .tab-group { margin-top: 25px; border-bottom: 2px solid #007bff; display: flex; gap: 5px; }
-        .tab { padding: 12px 25px; cursor: pointer; border: 1px solid #ddd; border-bottom: none; background: #eee; border-radius: 8px 8px 0 0; }
-        .tab.active { background: #007bff; color: white; font-weight: bold; border-color: #007bff; }
-        .tab-content { display: none; padding: 20px; border: 1px solid #ddd; border-top: none; background: #fff; }
+        /* 頁籤樣式 - 大自然配色 */
+        .tab-group { margin-top: 30px; border-bottom: 3px solid var(--forest-green); display: flex; gap: 5px; }
+        .tab { padding: 12px 25px; cursor: pointer; border: 1px solid #d1d1d1; border-bottom: none; background: #e8ede7; border-radius: 10px 10px 0 0; color: #555; transition: 0.3s; }
+        .tab.active { background: var(--forest-green); color: white; font-weight: bold; border-color: var(--forest-green); }
+        .tab-content { display: none; padding: 25px; border: 1px solid #d1d1d1; border-top: none; background: #fff; border-radius: 0 0 10px 10px; }
         .tab-content.active { display: block; }
         
-        /* 表單區域優化 */
-        .conveyor-item { border: 1px solid #ced4da; padding: 20px; margin-bottom: 15px; border-radius: 8px; background: #fafafa; position: relative; }
-        .remove-btn { position: absolute; top: 15px; right: 15px; background: #dc3545; color: white; border: none; padding: 6px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        /* 表單區域 */
+        .conveyor-item { border: 1px solid #c2cfc1; padding: 20px; margin-bottom: 20px; border-radius: 10px; background: #f9fbf9; position: relative; border-left: 5px solid var(--sky-blue); }
+        .remove-btn { position: absolute; top: 15px; right: 15px; background: #a44a3f; color: white; border: none; padding: 6px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; }
         
-        /* 兩列佈局設定 */
         .form-row { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 15px; }
-        .form-row:last-child { margin-bottom: 0; }
-        
         .form-group { flex: 1; min-width: 200px; }
-        label { display: block; font-size: 14px; margin-bottom: 8px; font-weight: bold; color: #555; }
-        input, select { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #bbb; font-size: 14px; box-sizing: border-box; background-color: #fff; }
-        input:focus, select:focus { border-color: #007bff; outline: none; box-shadow: 0 0 5px rgba(0,123,255,0.2); }
+        label { display: block; font-size: 14px; margin-bottom: 8px; font-weight: bold; color: var(--forest-green); }
+        input, select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #b5c4b4; font-size: 14px; box-sizing: border-box; }
+        input:focus, select:focus { border-color: var(--river-blue); outline: none; box-shadow: 0 0 5px rgba(88,129,87,0.3); }
 
         /* 按鈕樣式 */
-        .btn-main { background: #007bff; color: white; padding: 12px 30px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        .btn-main:hover { background: #0056b3; }
-        .btn-export { background: #28a745; color: white; padding: 12px 30px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; float: right; }
+        .btn-main { background: var(--river-blue); color: white; padding: 12px 30px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .btn-main:hover { background: var(--forest-green); }
+        .btn-export { background: var(--earth-brown); color: white; padding: 12px 30px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; float: right; }
+        .btn-export:hover { background: #7a654d; }
         
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #444; padding: 12px; text-align: left; }
-        th { background-color: #f8f9fa; }
+        th, td { border: 1px solid #888; padding: 12px; text-align: left; }
+        th { background-color: #f0f4f0; color: var(--forest-green); }
+        h4 { color: var(--earth-brown); border-left: 4px solid var(--sky-blue); padding-left: 10px; margin-top: 30px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>薪昌股份有限公司</h1>
+    <h1>何鑫股份有限公司</h1>
     <h2>帶運機滾輪統計表 請購單</h2>
 
     <div id="inputArea">
@@ -55,9 +64,9 @@
 
     <div id="resultWrapper" style="display:none;">
         <div class="tab-group">
-            <div class="tab active" onclick="switchTab(0)">成品明細 (按機器)</div>
-            <div class="tab" onclick="switchTab(1)">配件總計表 (BOM)</div>
-            <button class="btn-export" onclick="exportToExcel()">匯出 Excel</button>
+            <div class="tab active" onclick="switchTab(0)">輸送帶滾輪明細</div>
+            <div class="tab" onclick="switchTab(1)">配件統計表 (清單)</div>
+            <button class="btn-export" onclick="exportToExcel()">匯出 Excel 報表</button>
         </div>
 
         <div id="tab0" class="tab-content active">
@@ -81,7 +90,6 @@
         div.id = `item-${conveyorCount}`;
         div.innerHTML = `
             <button class="remove-btn" onclick="this.parentElement.remove()">移除</button>
-            
             <div class="form-row">
                 <div class="form-group">
                     <label>帶運機名稱</label>
@@ -98,7 +106,6 @@
                     </select>
                 </div>
             </div>
-
             <div class="form-row">
                 <div class="form-group">
                     <label>帶運機種類</label>
@@ -128,7 +135,6 @@
         container.appendChild(div);
     }
     
-    // 初始化第一筆
     addConveyor();
 
     function switchTab(idx) {
@@ -150,12 +156,19 @@
             const rollerType = item.querySelector('.rollerType').value;
 
             let machineItems = {};
-            const addMI = (itemName, count) => {
+            // 特殊皮帶項目的 Key
+            const beltKey = (type === 'sorting') ? "【輸送皮帶】EP200x4Px3/16x1/8（環帶）" : "【輸送皮帶】EP200x4Px3/16x1/8（平帶）";
+
+            const addMI = (itemName, count, isManual = false) => {
                 const fullName = `${beltWidth}${itemName}`;
-                machineItems[fullName] = (machineItems[fullName] || 0) + count;
+                if (isManual) {
+                    machineItems[fullName] = count; // 針對手動輸入項目直接賦值
+                } else {
+                    machineItems[fullName] = (machineItems[fullName] || 0) + count;
+                }
             };
 
-            // 運算邏輯
+            // 邏輯計算
             if (type === 'main' || type === 'storage') {
                 let fwd = (rollerType === 'chain') ? "吊鏈式前行滾輪組" : "托架前行輪組(40度)";
                 let b_norm = (rollerType === 'chain') ? "吊鏈式回程滾輪組(一般)" : "吊片式回程滾輪組(一般)";
@@ -186,27 +199,38 @@
                 addMI("吊片式回程滾輪組(一般)", 1 * qty); addMI("吊片式回程滾輪組(螺旋)", 1 * qty);
             }
 
-            detailHtml += `<h4>${name} [寬度:${beltWidth}]</h4><table><tr><th>成品組件名稱</th><th>數量</th></tr>`;
+            // 最後加入皮帶項目 (不乘以機器數量，數量留白)
+            addMI(beltKey, "", true);
+
+            detailHtml += `<h4>${name} [寬度:${beltWidth}]</h4><table><tr><th>組件名稱</th><th>數量</th><th>單位</th></tr>`;
             for (let k in machineItems) {
                 const n = machineItems[k];
-                detailHtml += `<tr><td>${k}</td><td>${n} 組</td></tr>`;
-                const pureName = k.replace(beltWidth, "");
+                const isBelt = k.includes("輸送皮帶");
+                const unit = isBelt ? "M" : "組";
+                detailHtml += `<tr><td>${k}</td><td>${n}</td><td>${unit}</td></tr>`;
+                
+                // BOM 拆解邏輯
                 const prefix = beltWidth;
+                const pureName = k.replace(beltWidth, "");
 
-                if (pureName.includes("吊片式")) {
-                    partMap[k] = (partMap[k]||0)+n;
-                    partMap[prefix + "吊片"] = (partMap[prefix + "吊片"]||0)+n*2;
-                } else if (pureName.includes("吊鏈式")) {
-                    partMap[k] = (partMap[k]||0)+n;
-                    let hook = pureName.includes("前行") ? "吊鍊式前行輪掛勾" : "吊鍊式回程輪掛勾";
-                    partMap[prefix + hook] = (partMap[prefix + hook]||0)+n*2;
-                } else if (pureName.includes("托架") || pureName.includes("自動調心")) {
-                    let deg = pureName.match(/\d+度/)[0];
-                    let bracketType = pureName.includes("自動調心") ? "自動調心前進滾輪組支架" : "前進滾輪組支架";
-                    partMap[`${prefix}${bracketType}(${deg})`] = (partMap[`${prefix}${bracketType}(${deg})`]||0)+n;
-                    let rollerType = pureName.includes("緩衝") ? "前進滾輪(緩衝)" : "前進滾輪(一般)";
-                    partMap[prefix + rollerType] = (partMap[prefix + rollerType]||0)+n*3;
-                    if(pureName.includes("自動調心")) partMap[prefix + "側擋輪"] = (partMap[prefix + "側擋輪"]||0)+n*2;
+                if (isBelt) {
+                    partMap[k] = (partMap[k] || ""); // 皮帶在總表也保持空白數量
+                } else {
+                    if (pureName.includes("吊片式")) {
+                        partMap[k] = (partMap[k]||0)+n;
+                        partMap[prefix + "吊片"] = (partMap[prefix + "吊片"]||0)+n*2;
+                    } else if (pureName.includes("吊鏈式")) {
+                        partMap[k] = (partMap[k]||0)+n;
+                        let hook = pureName.includes("前行") ? "吊鍊式前行輪掛勾" : "吊鍊式回程輪掛勾";
+                        partMap[prefix + hook] = (partMap[prefix + hook]||0)+n*2;
+                    } else if (pureName.includes("托架") || pureName.includes("自動調心")) {
+                        let deg = pureName.match(/\d+度/)[0];
+                        let bracketType = pureName.includes("自動調心") ? "自動調心前進滾輪組支架" : "前進滾輪組支架";
+                        partMap[`${prefix}${bracketType}(${deg})`] = (partMap[`${prefix}${bracketType}(${deg})`]||0)+n;
+                        let rType = pureName.includes("緩衝") ? "前進滾輪(緩衝)" : "前進滾輪(一般)";
+                        partMap[prefix + rType] = (partMap[prefix + rType]||0)+n*3;
+                        if(pureName.includes("自動調心")) partMap[prefix + "側擋輪"] = (partMap[prefix + "側擋輪"]||0)+n*2;
+                    }
                 }
             }
             detailHtml += `</table>`;
@@ -217,14 +241,16 @@
         excelData = [];
         let summaryHtml = `<table><tr><th>配件名稱</th><th>數量</th><th>單位</th></tr>`;
         Object.keys(partMap).sort().forEach(key => {
+            let val = partMap[key];
             let unit = "組";
-            if (key.includes("支架")) unit = "支";
+            if (key.includes("輸送皮帶")) unit = "M";
+            else if (key.includes("支架")) unit = "支";
             else if (key.includes("吊片")) unit = "片";
             else if (key.includes("掛勾")) unit = "只";
             else if (key.includes("滾輪(") || key.includes("側擋輪")) unit = "顆";
             
-            summaryHtml += `<tr><td>${key}</td><td>${partMap[key]}</td><td>${unit}</td></tr>`;
-            excelData.push([key, partMap[key], unit]);
+            summaryHtml += `<tr><td>${key}</td><td>${val}</td><td>${unit}</td></tr>`;
+            excelData.push([key, val, unit]);
         });
         summaryHtml += `</table>`;
         document.getElementById('summaryContent').innerHTML = summaryHtml;
@@ -234,7 +260,7 @@
     function exportToExcel() {
         const wb = XLSX.utils.book_new();
         const wsData = [
-            ["薪昌股份有限公司"],
+            ["何鑫股份有限公司"],
             ["帶運機滾輪統計表 請購單"],
             [],
             ["配件名稱", "數量", "單位", "備註"]
@@ -244,11 +270,11 @@
         wsData.push([], ["申請人：__________", "", "部門主管：__________", "", "廠務部：__________"]);
 
         const ws = XLSX.utils.aoa_to_sheet(wsData);
-        ws['!cols'] = [{ wch: 45 }, { wch: 10 }, { wch: 10 }, { wch: 15 }];
+        ws['!cols'] = [{ wch: 50 }, { wch: 10 }, { wch: 10 }, { wch: 15 }];
         ws['!merges'] = [{ s:{r:0,c:0}, e:{r:0,c:3} }, { s:{r:1,c:0}, e:{r:1,c:3} }];
 
-        XLSX.utils.book_append_sheet(wb, ws, "請購單總計");
-        XLSX.writeFile(wb, `薪昌滾輪統計_${new Date().toLocaleDateString()}.xlsx`);
+        XLSX.utils.book_append_sheet(wb, ws, "請購單統計");
+        XLSX.writeFile(wb, `何鑫滾輪統計_${new Date().toLocaleDateString()}.xlsx`);
     }
 </script>
 
