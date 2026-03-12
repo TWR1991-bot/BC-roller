@@ -2,77 +2,287 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>何鑫實業股份有限公司 - 滾輪統計系統</title>
+    <title>何鑫實業股份有限公司 - 滾輪統計系統 V9</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <style>
         :root {
-            --forest-green: #2d5a27;
-            --leaf-green: #4f772d;
-            --earth-brown: #91785d;
-            --sky-blue: #a3c4bc;
-            --river-blue: #588157;
-            --bg-color: #f1f3f2;
+            --shohoku-red: #C1272D;
+            --basketball-orange: #E86100;
+            --comic-black: #1A1A1A;
+            --halftone-gray: #F0F0F0;
+            --paper-white: #FFFFFF;
         }
 
-        body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg-color); padding: 20px; color: #333; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.05); border-top: 8px solid var(--forest-green); }
+        body { 
+            font-family: "Microsoft JhengHei", "黑體-繁", sans-serif; 
+            background-color: #333;
+            background-image: radial-gradient(var(--comic-black) 15%, transparent 16%), radial-gradient(var(--comic-black) 15%, transparent 16%);
+            background-size: 15px 15px;
+            background-position: 0 0, 7.5px 7.5px;
+            padding: 20px; 
+            color: var(--comic-black);
+        }
+
+        .container { 
+            max-width: 1400px; 
+            margin: auto; 
+            background: var(--paper-white); 
+            padding: 40px; 
+            border: 6px solid var(--comic-black);
+            box-shadow: 15px 15px 0px var(--shohoku-red);
+            position: relative;
+        }
+
+        /* 抬頭區域：置中對齊 */
+        .header-section { 
+            text-align: center;
+            border-bottom: 4px solid var(--comic-black);
+            padding-bottom: 25px;
+            margin-bottom: 35px;
+        }
+
+        .header-titles h1 { 
+            color: var(--shohoku-red); 
+            margin: 0; 
+            font-size: 3rem; 
+            font-weight: 900;
+            letter-spacing: 4px;
+            -webkit-text-stroke: 1px var(--comic-black);
+        }
+
+        .header-titles h2 { 
+            color: white; 
+            margin: 10px 0 0 0; 
+            font-size: 1.5rem; 
+            font-weight: bold;
+            background: var(--comic-black);
+            padding: 8px 30px;
+            display: inline-block;
+            transform: skewX(-10deg);
+        }
         
-        .header-section { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 25px; }
-        .logo-img { height: 90px; width: auto; mix-blend-mode: multiply; border-radius: 5px; }
+        /* 佈局：左輸入、右說明 */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 30px;
+        }
+
+        /* 側邊說明欄樣式 */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .comic-box {
+            border: 4px solid var(--comic-black);
+            padding: 20px;
+            background: #fff;
+            position: relative;
+            box-shadow: 5px 5px 0px var(--shohoku-red);
+        }
+
+        .comic-box h3 {
+            margin-top: 0;
+            background: var(--shohoku-red);
+            color: white;
+            padding: 5px 15px;
+            font-size: 1.2rem;
+            display: inline-block;
+            transform: skewX(-5deg);
+            margin-bottom: 15px;
+        }
+
+        .comic-box ul {
+            padding-left: 20px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            line-height: 1.8;
+            margin: 0;
+        }
+
+        .comic-box li {
+            margin-bottom: 8px;
+        }
+
+        /* 全域工案資訊樣式 */
+        .project-info-box {
+            background-color: #f9f9f9;
+            border: 3px solid var(--comic-black);
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 5px 5px 0px var(--comic-black);
+        }
+
+        /* 表單區域 */
+        .conveyor-item { 
+            border: 4px solid var(--comic-black); 
+            padding: 20px; 
+            margin-bottom: 25px; 
+            background: var(--halftone-gray);
+            position: relative;
+            box-shadow: 8px 8px 0px var(--comic-black);
+        }
+
+        .remove-btn { 
+            position: absolute; 
+            top: -10px; 
+            right: -10px; 
+            background: var(--comic-black); 
+            color: white; 
+            border: 2px solid white;
+            padding: 8px 15px; 
+            cursor: pointer; 
+            font-weight: 900;
+        }
         
-        .header-titles h1 { color: var(--forest-green); margin: 0; font-size: 2.2rem; letter-spacing: 2px; }
-        .header-titles h2 { color: var(--earth-brown); margin: 5px 0 0 0; font-size: 1.3rem; font-weight: normal; }
+        .form-row { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
+        .form-group { flex: 1; min-width: 180px; }
+        label { 
+            display: block; 
+            font-size: 14px; 
+            margin-bottom: 5px; 
+            font-weight: 900; 
+            color: var(--shohoku-red);
+        }
+        input, select { 
+            width: 100%; 
+            padding: 10px; 
+            border: 3px solid var(--comic-black); 
+            border-radius: 0; 
+            font-size: 14px; 
+            box-sizing: border-box; 
+            font-weight: bold;
+        }
+
+        /* 頁籤與按鈕 */
+        .tab-group { margin-top: 30px; display: flex; gap: 10px; }
+        .tab { 
+            padding: 12px 25px; 
+            cursor: pointer; 
+            border: 4px solid var(--comic-black); 
+            background: white; 
+            font-weight: bold; 
+            transform: skewX(-5deg);
+        }
+        .tab.active { background: var(--shohoku-red); color: white; transform: scale(1.05) skewX(-5deg); }
         
-        .tab-group { margin-top: 30px; border-bottom: 3px solid var(--forest-green); display: flex; gap: 5px; }
-        .tab { padding: 12px 25px; cursor: pointer; border: 1px solid #d1d1d1; border-bottom: none; background: #e8ede7; border-radius: 10px 10px 0 0; color: #555; transition: 0.3s; }
-        .tab.active { background: var(--forest-green); color: white; font-weight: bold; border-color: var(--forest-green); }
-        .tab-content { display: none; padding: 25px; border: 1px solid #d1d1d1; border-top: none; background: #fff; border-radius: 0 0 10px 10px; }
+        .tab-content { 
+            display: none; 
+            padding: 25px; 
+            border: 4px solid var(--comic-black); 
+            background: #FFF; 
+            margin-top: -4px;
+        }
         .tab-content.active { display: block; }
         
-        .conveyor-item { border: 1px solid #c2cfc1; padding: 20px; margin-bottom: 20px; border-radius: 10px; background: #f9fbf9; position: relative; border-left: 5px solid var(--sky-blue); }
-        .remove-btn { position: absolute; top: 15px; right: 15px; background: #a44a3f; color: white; border: none; padding: 6px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; }
-        
-        .form-row { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 15px; }
-        .form-group { flex: 1; min-width: 200px; }
-        label { display: block; font-size: 14px; margin-bottom: 8px; font-weight: bold; color: var(--forest-green); }
-        input, select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #b5c4b4; font-size: 14px; box-sizing: border-box; }
+        .btn-main { 
+            background: var(--shohoku-red); 
+            color: white; 
+            padding: 15px 35px; 
+            border: 4px solid var(--comic-black); 
+            cursor: pointer; 
+            font-size: 18px; 
+            font-weight: 900;
+            box-shadow: 5px 5px 0px var(--comic-black);
+        }
 
-        .btn-main { background: var(--river-blue); color: white; padding: 12px 30px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        .btn-export { background: var(--earth-brown); color: white; padding: 12px 30px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; float: right; }
+        .btn-export { 
+            background: var(--basketball-orange); 
+            color: white; 
+            padding: 15px 35px; 
+            border: 4px solid var(--comic-black); 
+            cursor: pointer; 
+            font-size: 18px; 
+            font-weight: 900;
+            float: right;
+            box-shadow: 5px 5px 0px var(--comic-black);
+        }
         
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #888; padding: 12px; text-align: left; }
-        th { background-color: #f0f4f0; color: var(--forest-green); }
-        h4 { color: var(--earth-brown); border-left: 4px solid var(--sky-blue); padding-left: 10px; margin-top: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 3px solid var(--comic-black); }
+        th, td { border: 2px solid var(--comic-black); padding: 10px; text-align: left; font-weight: bold; }
+        th { background-color: var(--shohoku-red); color: white; }
+        h4 { color: white; background: var(--comic-black); padding: 8px 15px; display: inline-block; margin-top: 30px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header-section">
-        <img src="https://scontent.fkhh1-2.fna.fbcdn.net/v/t39.30808-6/640291908_1475578454576581_492615886974763543_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=1d70fc&_nc_ohc=zVFiibJZQNsQ7kNvwFafSAC&_nc_oc=AdnmBA5tvZyZaWGdYBH2gkKB2TQhWoUtyISK5o3k-bN7APFfcdmnRj3DnLTlBCanzv4&_nc_zt=23&_nc_ht=scontent.fkhh1-2.fna&_nc_gid=IfYkDkC6NQBL96zUIO5yDw&_nc_ss=8&oh=00_AfxUc3qKc7aoaOtJKVr2-j_7P6linIXIeBR6IaAjv9a0Qg&oe=69AC06F8" 
-             alt="何鑫實業 LOGO" 
-             class="logo-img"
-             onerror="this.src='https://via.placeholder.com/80x80?text=LOGO'">
         <div class="header-titles">
             <h1>何鑫實業股份有限公司</h1>
-            <h2>帶運機滾輪統計表 請購單</h2>
+            <h2>帶運機滾輪統計表 估算單</h2>
         </div>
     </div>
 
-    <div id="inputArea">
-        <div id="conveyorList"></div>
-        <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <button class="btn-main" style="background: #6c757d;" onclick="addConveyor()">+ 新增帶運機</button>
-            <button class="btn-main" onclick="calculateAll()">1. 生成統計數據</button>
+    <!-- 全域工案資訊 -->
+    <div class="project-info-box">
+        <div class="form-row">
+            <div class="form-group"><label>工案號碼</label><input type="text" id="globalProjNo" placeholder="請輸入工案號碼"></div>
+            <div class="form-group"><label>工案名稱</label><input type="text" id="globalProjName" placeholder="請輸入工案名稱"></div>
+            <div class="form-group"><label>填表人</label><input type="text" id="globalPreparer" placeholder="姓名"></div>
+            <div class="form-group"><label>填表日期</label><input type="date" id="globalDate"></div>
         </div>
     </div>
 
+    <div class="main-layout">
+        <!-- 左側輸入區 -->
+        <div id="inputArea">
+            <div id="conveyorList"></div>
+            <div style="display: flex; gap: 15px; margin-top: 10px;">
+                <button class="btn-main" style="background: #666;" onclick="addConveyor()">+ 新增項目</button>
+                <button class="btn-main" onclick="calculateAll()">生成數據 !!</button>
+            </div>
+        </div>
+
+        <!-- 右側說明區 -->
+        <div class="sidebar">
+            <div class="comic-box">
+                <h3>操作方式</h3>
+                <ul>
+                    <li>1. 點擊「新增項目」增加帶運機規格。</li>
+                    <li>2. 輸入名稱、選擇寬度與帶運機種類。</li>
+                    <li>3. 輸入直線距離 (mm)。</li>
+                    <li>4. 點擊「生成數據」產出各項清單。</li>
+                    <li>5. 點擊「匯出 EXCEL」完成估算作業。</li>
+                    <li style="color: red; font-weight: bold;">6. 數據生成為一次性，若要使用請記得匯出EXCEL</li>
+                </ul>
+            </div>
+            <div class="comic-box">
+                <h3>計算邏輯</h3>
+                <ul>
+                    <li><strong>主帶運機模式：</strong><br>
+                        前行輪 = (L - 7000 [托架空間]) / 1000<br>
+                        回程輪 = (L - 2000 [托架空間]) / 2000<br>
+                        皮帶 = (L × 2 + 4000) / 1000 (M)
+                    </li>
+                    <li><strong>入庫帶運機模式：</strong><br>
+                        前行輪 = (L - 4000 [托架空間]) / 1000<br>
+                        回程輪 = (L - 2000 [托架空間]) / 2000<br>
+                        皮帶 = (L × 2 + 4000) / 1000 (M)
+                    </li>
+                    <li><strong>分料帶運機模式：</strong><br>
+                        皮帶 = (L × 2 + 400) / 1000 (M)<br>
+                        其餘採用固定配件組合。
+                    </li>
+                    <li><strong>回程輪規則：</strong><br>
+                        總數需扣除 1 組更換為螺旋式。
+                    </li>
+                    <li><strong>備品規則：</strong><br>
+                        全案固定加增一次性備用滾輪，不隨機台數量累加。
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 結果區 -->
     <div id="resultWrapper" style="display:none;">
         <div class="tab-group">
             <div class="tab active" onclick="switchTab(0)">輸送帶滾輪明細</div>
             <div class="tab" onclick="switchTab(1)">配件統計表 (清單)</div>
-            <button class="btn-export" onclick="exportToExcel()">匯出 Excel 報表</button>
+            <button class="btn-export" onclick="exportToExcel()">匯出 EXCEL !!</button>
         </div>
         <div id="tab0" class="tab-content active"><div id="detailContent"></div></div>
         <div id="tab1" class="tab-content"><div id="summaryContent"></div></div>
@@ -81,7 +291,8 @@
 
 <script>
     let conveyorCount = 0;
-    let excelData = [];
+    // 預設日期為今天
+    document.getElementById('globalDate').valueAsDate = new Date();
 
     function addConveyor() {
         conveyorCount++;
@@ -90,9 +301,9 @@
         div.className = 'conveyor-item';
         div.id = `item-${conveyorCount}`;
         div.innerHTML = `
-            <button class="remove-btn" onclick="this.parentElement.remove()">移除</button>
+            <button class="remove-btn" onclick="this.parentElement.remove()">移除 X</button>
             <div class="form-row">
-                <div class="form-group"><label>帶運機名稱</label><input type="text" class="name" value="帶運機-${conveyorCount}"></div>
+                <div class="form-group"><label>帶運機名稱</label><input type="text" class="name" value="機型-${conveyorCount}"></div>
                 <div class="form-group">
                     <label>皮帶寬度</label>
                     <select class="width">
@@ -109,8 +320,8 @@
                         <option value="sorting">分料帶運機</option>
                     </select>
                 </div>
-                <div class="form-group" style="flex: 0.5; min-width: 100px;"><label>數量</label><input type="number" class="qty" value="1" min="1"></div>
-                <div class="form-group"><label>長度 (頭尾輪直線距離 mm)</label><input type="number" class="length" placeholder="例如: 15000"></div>
+                <div class="form-group" style="flex: 0.3; min-width: 80px;"><label>數量</label><input type="number" class="qty" value="1" min="1"></div>
+                <div class="form-group"><label>L：頭尾輪直線距離 (mm)</label><input type="number" class="length" placeholder="輸入數值"></div>
                 <div class="form-group"><label>滾輪種類</label><select class="rollerType"><option value="chain">吊鍊</option><option value="bracket">托架</option></select></div>
             </div>
         `;
@@ -126,91 +337,231 @@
     function calculateAll() {
         const items = document.querySelectorAll('.conveyor-item');
         let detailHtml = "";
-        let partMap = {};
+        let partMap = {}; // key: partName_isSpare -> { name, count, unit, isSpare }
+        
+        // 專案備品計數器 (全專案僅加一次)
+        let hasSparesTriggered = false;
+        let lastWidthForSpares = "750W"; 
+
         items.forEach(item => {
             const name = item.querySelector('.name').value;
             const beltWidth = item.querySelector('.width').value;
             const type = item.querySelector('.type').value;
             const qty = parseInt(item.querySelector('.qty').value) || 0;
-            const length = parseInt(item.querySelector('.length').value) || 0;
+            const lengthInput = item.querySelector('.length').value;
+            const length = parseInt(lengthInput) || 0;
             const rollerType = item.querySelector('.rollerType').value;
-            let machineItems = {};
+            
+            let machineItems = [];
             const beltKey = (type === 'sorting') ? "【輸送皮帶】EP200x4Px3/16x1/8（環帶）" : "【輸送皮帶】EP200x4Px3/16x1/8（平帶）";
-            const addMI = (itemName, count, isManual = false) => {
+            
+            let beltLengthDisplay = "";
+            if (lengthInput !== "") {
+                const beltOffset = (type === 'sorting') ? 400 : 4000;
+                const beltCalcResult = ((length * 2) + beltOffset) / 1000;
+                beltLengthDisplay = (beltCalcResult * qty).toFixed(2);
+            }
+
+            const addMI = (itemName, count, isBelt = false, isSpare = false) => {
                 const fullName = `${beltWidth}${itemName}`;
-                if (isManual) machineItems[fullName] = count;
-                else machineItems[fullName] = (machineItems[fullName] || 0) + count;
+                machineItems.push({ name: fullName, count: count, unit: isBelt ? "M" : "組", isSpare: isSpare });
             };
 
             if (type === 'main' || type === 'storage') {
+                hasSparesTriggered = true;
+                lastWidthForSpares = beltWidth;
+                
                 let fwd = (rollerType === 'chain') ? "吊鏈式前行滾輪組" : "托架前行輪組(40度)";
                 let b_norm = (rollerType === 'chain') ? "吊鏈式回程滾輪組(一般)" : "吊片式回程滾輪組(一般)";
                 let b_spir = (rollerType === 'chain') ? "吊鏈式回程滾輪組(螺旋)" : "吊片式回程滾輪組(螺旋)";
+                
                 let fCount = (type === 'main') ? Math.floor((length - 7000) / 1000) : Math.floor((length - 4000) / 1000);
                 let bCount = Math.floor((length - 2000) / 2000);
-                addMI(fwd, fCount * qty);
-                if (bCount > 0) { addMI(b_spir, 1 * qty); addMI(b_norm, (bCount - 1) * qty); }
-                addMI("吊鏈式回程滾輪組(一般)", 2 * qty); addMI("托架前行輪組(40度)", 1 * qty); addMI("托架緩衝輪組(40度)", 1 * qty);
-            }
-            if (type === 'main') {
-                addMI("托架緩衝輪組(40度)", 8 * qty); addMI("托架前行輪組(40度)", 3 * qty);
-                addMI("托架前行輪組(35度)", 1 * qty); addMI("托架前行輪組(30度)", 1 * qty);
-            } else if (type === 'storage') {
-                addMI("托架緩衝輪組(40度)", 2 * qty); addMI("托架前行輪組(40度)", 1 * qty);
-                addMI("托架緩衝輪組(35度)", 1 * qty); addMI("托架緩衝輪組(30度)", 1 * qty);
-            } else if (type === 'sorting') {
-                addMI("托架緩衝輪組(30度)", 2 * qty); addMI("托架緩衝輪組(25度)", 1 * qty);
-                addMI("托架前行輪組(30度)", 1 * qty); addMI("自動調心前進滾輪組(25度-單向)", 1 * qty);
-                addMI("吊片式回程滾輪組(一般)", 1 * qty); addMI("吊片式回程滾輪組(螺旋)", 1 * qty);
-            }
-            addMI(beltKey, "", true);
 
-            detailHtml += `<h4>${name} [寬度:${beltWidth}]</h4><table><tr><th>組件名稱</th><th>數量</th><th>單位</th></tr>`;
-            for (let k in machineItems) {
-                const n = machineItems[k];
-                const isBelt = k.includes("輸送皮帶");
-                detailHtml += `<tr><td>${k}</td><td>${n}</td><td>${isBelt?"M":"組"}</td></tr>`;
-                const prefix = beltWidth;
-                const pureName = k.replace(beltWidth, "");
-                if (isBelt) partMap[k] = (partMap[k] || "");
-                else {
-                    if (pureName.includes("吊片式")) { partMap[k] = (partMap[k]||0)+n; partMap[prefix + "吊片"] = (partMap[prefix + "吊片"]||0)+n*2; }
-                    else if (pureName.includes("吊鏈式")) { 
-                        partMap[k] = (partMap[k]||0)+n; 
-                        partMap[prefix + (pureName.includes("前行") ? "吊鍊式前行輪掛勾" : "吊鍊式回程輪掛勾")] = (partMap[prefix + (pureName.includes("前行") ? "吊鍊式前行輪掛勾" : "吊鍊式回程輪掛勾")]||0)+n*2; 
-                    }
-                    else if (pureName.includes("托架") || pureName.includes("自動調心")) {
-                        let deg = pureName.match(/\d+度/)[0];
-                        partMap[`${prefix}${pureName.includes("自動調心")?"自動調心前進滾輪組支架":"前進滾輪組支架"}(${deg})`] = (partMap[`${prefix}${pureName.includes("自動調心")?"自動調心前進滾輪組支架":"前進滾輪組支架"}(${deg})`]||0)+n;
-                        partMap[prefix + (pureName.includes("緩衝")?"前進滾輪(緩衝)":"前進滾輪(一般)")] = (partMap[prefix + (pureName.includes("緩衝")?"前進滾輪(緩衝)":"前進滾輪(一般)")]||0)+n*3;
-                        if(pureName.includes("自動調心")) partMap[prefix + "側擋輪"] = (partMap[prefix + "側擋輪"]||0)+n*2;
-                    }
+                if (fCount > 0) addMI(fwd, fCount * qty);
+                if (bCount > 0) {
+                    addMI(b_spir, 1 * qty);
+                    if (bCount > 1) addMI(b_norm, (bCount - 1) * qty);
                 }
             }
+
+            if (type === 'main') {
+                addMI("托架緩衝輪組(40度)", 8 * qty); 
+                addMI("托架前行輪組(40度)", 3 * qty);
+                addMI("托架前行輪組(35度)", 1 * qty); 
+                addMI("托架前行輪組(30度)", 1 * qty);
+            } else if (type === 'storage') {
+                addMI("托架緩衝輪組(40度)", 2 * qty); 
+                addMI("托架前行輪組(40度)", 1 * qty);
+                addMI("托架緩衝輪組(35度)", 1 * qty); 
+                addMI("托架緩衝輪組(30度)", 1 * qty);
+            } else if (type === 'sorting') {
+                addMI("托架緩衝輪組(30度)", 2 * qty); 
+                addMI("托架緩衝輪組(25度)", 1 * qty);
+                addMI("托架前行輪組(30度)", 1 * qty); 
+                addMI("自動調心前進滾輪組(25度-單向)", 1 * qty);
+                addMI("吊片式回程滾輪組(一般)", 1 * qty); 
+                addMI("吊片式回程滾輪組(螺旋)", 1 * qty);
+            }
+
+            addMI(beltKey, beltLengthDisplay, true);
+
+            detailHtml += `<h4>🔥 ${name} [${beltWidth}]</h4><table><tr><th>組件名稱</th><th>數量</th><th>單位</th><th>備註</th></tr>`;
+            machineItems.forEach(item => {
+                detailHtml += `<tr><td>${item.name}</td><td>${item.count}</td><td>${item.unit}</td><td></td></tr>`;
+                processBOM(item, partMap, beltWidth);
+            });
             detailHtml += `</table>`;
         });
+
+        if (hasSparesTriggered) {
+            let spareItems = [];
+            spareItems.push({ name: `${lastWidthForSpares}吊鏈式回程滾輪組(一般)`, count: 2, unit: "組", isSpare: true });
+            spareItems.push({ name: `${lastWidthForSpares}托架前行輪組(40度)`, count: 1, unit: "組", isSpare: true });
+            spareItems.push({ name: `${lastWidthForSpares}托架緩衝輪組(40度)`, count: 1, unit: "組", isSpare: true });
+
+            detailHtml += `<h4>🛠️ 專案統一備品項目</h4><table><tr><th>組件名稱</th><th>數量</th><th>單位</th><th>備註</th></tr>`;
+            spareItems.forEach(item => {
+                detailHtml += `<tr><td>${item.name}</td><td>${item.count}</td><td>${item.unit}</td><td>備用</td></tr>`;
+                processBOM(item, partMap, lastWidthForSpares);
+            });
+            detailHtml += `</table>`;
+        }
+
         document.getElementById('detailContent').innerHTML = detailHtml;
-        excelData = [];
-        let summaryHtml = `<table><tr><th>配件名稱</th><th>數量</th><th>單位</th></tr>`;
-        Object.keys(partMap).sort().forEach(key => {
-            let unit = key.includes("皮帶") ? "M" : key.includes("支架") ? "支" : key.includes("吊片") ? "片" : key.includes("掛勾") ? "只" : (key.includes("滾輪(") || key.includes("側擋輪")) ? "顆" : "組";
-            summaryHtml += `<tr><td>${key}</td><td>${partMap[key]}</td><td>${unit}</td></tr>`;
-            excelData.push([key, partMap[key], unit]);
+
+        let sortedBOM = Object.values(partMap).sort((a, b) => {
+            if (a.isSpare !== b.isSpare) return a.isSpare ? 1 : -1; 
+            return a.name.localeCompare(b.name);
+        });
+
+        let summaryHtml = `<table><tr><th>配件名稱</th><th>數量</th><th>單位</th><th>備註</th></tr>`;
+        excelData = []; 
+        sortedBOM.forEach(p => {
+            const countVal = p.unit === "M" ? (typeof p.count === 'string' ? p.count : p.count.toFixed(2)) : p.count;
+            const remark = p.isSpare ? "備用" : "";
+            summaryHtml += `<tr><td>${p.name}</td><td>${countVal}</td><td>${p.unit}</td><td>${remark}</td></tr>`;
+            excelData.push({ name: p.name, count: countVal, unit: p.unit, remark: remark });
         });
         document.getElementById('summaryContent').innerHTML = summaryHtml + `</table>`;
         document.getElementById('resultWrapper').style.display = "block";
     }
 
+    function processBOM(item, partMap, prefix) {
+        if (item.count === "") return;
+        const pureName = item.name.replace(prefix, "");
+        const num = parseFloat(item.count);
+
+        const addPart = (partName, pCount, pUnit, isSp) => {
+            const key = `${partName}_${isSp ? 'spare' : 'norm'}`;
+            if (!partMap[key]) {
+                partMap[key] = { name: partName, count: 0, unit: pUnit, isSpare: isSp };
+            }
+            partMap[key].count += pCount;
+        };
+
+        if (item.name.includes("皮帶")) {
+            addPart(item.name, num, "M", item.isSpare);
+        } else {
+            if (pureName.includes("吊片式")) {
+                addPart(item.name, num, "組", item.isSpare);
+                addPart(prefix + "吊片", num * 2, "片", item.isSpare);
+            } else if (pureName.includes("吊鏈式")) {
+                addPart(item.name, num, "組", item.isSpare);
+                let hook = pureName.includes("前行") ? "吊鍊式前行輪掛勾" : "吊鍊式回程輪掛勾";
+                addPart(prefix + hook, num * 2, "只", item.isSpare);
+            } else if (pureName.includes("托架") || pureName.includes("自動調心")) {
+                let degMatch = pureName.match(/\d+度/);
+                let deg = degMatch ? degMatch[0] : "40度";
+                let bracketType = pureName.includes("自動調心") ? "自動調心前進滾輪組支架" : "前進滾輪組支架";
+                addPart(`${prefix}${bracketType}(${deg})`, num, "支", item.isSpare);
+                let rType = pureName.includes("緩衝") ? "前進滾輪(緩衝)" : "前進滾輪(一般)";
+                addPart(prefix + rType, num * 3, "顆", item.isSpare);
+                if(pureName.includes("自動調心")) addPart(prefix + "側擋輪", num * 2, "顆", item.isSpare);
+            }
+        }
+    }
+
     function exportToExcel() {
         const wb = XLSX.utils.book_new();
-        const wsData = [["何鑫實業股份有限公司"],["帶運機滾輪統計表 請購單"],[],["配件名稱", "數量", "單位", "備註"]];
-        excelData.forEach(row => wsData.push([row[0], row[1], row[2], ""]));
-        wsData.push([], ["申請人：__________", "", "部門主管：__________", "", "廠務部：__________"]);
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        ws['!cols'] = [{ wch: 50 }, { wch: 10 }, { wch: 10 }, { wch: 15 }];
-        ws['!merges'] = [{ s:{r:0,c:0}, e:{r:0,c:3} }, { s:{r:1,c:0}, e:{r:1,c:3} }];
-        XLSX.utils.book_append_sheet(wb, ws, "統計單");
-        XLSX.writeFile(wb, `何鑫統計_${new Date().toLocaleDateString()}.xlsx`);
+        
+        const pNo = document.getElementById('globalProjNo').value || "無";
+        const pName = document.getElementById('globalProjName').value || "無";
+        const prep = document.getElementById('globalPreparer').value || "無";
+        const date = document.getElementById('globalDate').value || "";
+
+        // --- 工作表1：輸送帶滾輪明細 ---
+        const detailRows = [
+            ["何鑫實業股份有限公司"],
+            ["帶運機滾輪統計表 估算單 (明細)"],
+            [`工案名稱: ${pName}`, `工案號碼: ${pNo}`],
+            [`填表人: ${prep}`, `日期: ${date}`],
+            [],
+            ["組件名稱", "數量", "單位", "備註"]
+        ];
+
+        const tables = document.querySelectorAll('#detailContent table');
+        const h4s = document.querySelectorAll('#detailContent h4');
+        
+        let normalTables = [];
+        let spareTable = null;
+
+        tables.forEach((table, idx) => {
+            let title = h4s[idx].innerText;
+            if (title.includes("備品")) {
+                spareTable = { title, table };
+            } else {
+                normalTables.push({ title, table });
+            }
+        });
+
+        // 寫入正常項目
+        normalTables.forEach(item => {
+            detailRows.push([item.title, "", "", ""]);
+            const rows = item.table.querySelectorAll('tr');
+            for (let i = 1; i < rows.length; i++) {
+                const tds = rows[i].querySelectorAll('td');
+                detailRows.push([tds[0].innerText, tds[1].innerText, tds[2].innerText, tds[3].innerText]);
+            }
+            detailRows.push([]);
+        });
+
+        // 寫入備品項目 (放在最下面)
+        if (spareTable) {
+            detailRows.push([spareTable.title, "", "", "備用"]);
+            const rows = spareTable.table.querySelectorAll('tr');
+            for (let i = 1; i < rows.length; i++) {
+                const tds = rows[i].querySelectorAll('td');
+                detailRows.push([tds[0].innerText, tds[1].innerText, tds[2].innerText, tds[3].innerText]);
+            }
+            detailRows.push([]);
+        }
+
+        const wsDetail = XLSX.utils.aoa_to_sheet(detailRows);
+        wsDetail['!cols'] = [{ wch: 50 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
+        wsDetail['!rows'] = Array(detailRows.length + 5).fill({ hpt: 20 });
+        XLSX.utils.book_append_sheet(wb, wsDetail, "輸送帶滾輪明細");
+
+        // --- 工作表2：配件統計表 ---
+        const summaryRows = [
+            ["何鑫實業股份有限公司"],
+            ["配件統計表 (估算總計)"],
+            [`工案名稱: ${pName}`, `工案號碼: ${pNo}`],
+            [`填表人: ${prep}`, `日期: ${date}`],
+            [],
+            ["配件名稱", "數量", "單位", "備註"]
+        ];
+
+        excelData.forEach(p => {
+            summaryRows.push([p.name, p.count, p.unit, p.remark]);
+        });
+
+        const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
+        wsSummary['!cols'] = [{ wch: 50 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
+        wsSummary['!rows'] = Array(summaryRows.length + 5).fill({ hpt: 20 });
+        XLSX.utils.book_append_sheet(wb, wsSummary, "配件統計表");
+
+        XLSX.writeFile(wb, `何鑫估算_${pNo}_${new Date().toLocaleDateString()}.xlsx`);
     }
 </script>
 </body>
