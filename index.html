@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>何鑫實業股份有限公司 - 滾輪統計系統 V9</title>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
     <style>
         :root {
             --shohoku-red: #C1272D;
@@ -291,6 +291,10 @@
 
 <script>
     let conveyorCount = 0;
+    // 匯出用的結構化資料（由「生成數據」產生）
+    let detailGroups = [];   // 第一頁：[{ title, isSpare, items:[{ uid, name, count, unit, remark }] }]
+    let summaryParts = [];   // 第二頁：[{ name, count, unit, remark, isBelt, refs:[{ uid, mult }] }]
+
     // 預設日期為今天
     document.getElementById('globalDate').valueAsDate = new Date();
 
@@ -334,14 +338,21 @@
         document.querySelectorAll('.tab-content').forEach((c, i) => c.classList.toggle('active', i === idx));
     }
 
+    function fmtCount(count, unit) {
+        if (count === null || count === undefined || count === "") return "";
+        return unit === "M" ? Number(count).toFixed(2) : count;
+    }
+
     function calculateAll() {
         const items = document.querySelectorAll('.conveyor-item');
         let detailHtml = "";
-        let partMap = {}; // key: partName_isSpare -> { name, count, unit, isSpare }
-        
+        let partMap = {};   // key -> { name, count, unit, isSpare, isBelt, remark, refs, seq }
+        let uidSeq = 0;     // 第一頁每一列的唯一編號，用來在 Excel 中建立連動公式
+        detailGroups = [];
+
         // 專案備品計數器 (全專案僅加一次)
         let hasSparesTriggered = false;
-        let lastWidthForSpares = "750W"; 
+        let lastWidthForSpares = "750W";
 
         items.forEach(item => {
             const name = item.querySelector('.name').value;
@@ -351,30 +362,29 @@
             const lengthInput = item.querySelector('.length').value;
             const length = parseInt(lengthInput) || 0;
             const rollerType = item.querySelector('.rollerType').value;
-            
+
             let machineItems = [];
             const beltKey = (type === 'sorting') ? "【輸送皮帶】EP200x4Px3/16x1/8（環帶）" : "【輸送皮帶】EP200x4Px3/16x1/8（平帶）";
-            
-            let beltLengthDisplay = "";
+
+            let beltLength = null; // 未輸入 L 時留空
             if (lengthInput !== "") {
                 const beltOffset = (type === 'sorting') ? 400 : 4000;
                 const beltCalcResult = ((length * 2) + beltOffset) / 1000;
-                beltLengthDisplay = (beltCalcResult * qty).toFixed(2);
+                beltLength = Math.round(beltCalcResult * qty * 100) / 100;
             }
 
-            const addMI = (itemName, count, isBelt = false, isSpare = false) => {
-                const fullName = `${beltWidth}${itemName}`;
-                machineItems.push({ name: fullName, count: count, unit: isBelt ? "M" : "組", isSpare: isSpare });
+            const addMI = (itemName, count, isBelt = false) => {
+                machineItems.push({ uid: ++uidSeq, name: `${beltWidth}${itemName}`, count: count, unit: isBelt ? "M" : "組", remark: "", isSpare: false, isBelt: isBelt });
             };
 
             if (type === 'main' || type === 'storage') {
                 hasSparesTriggered = true;
                 lastWidthForSpares = beltWidth;
-                
+
                 let fwd = (rollerType === 'chain') ? "吊鏈式前行滾輪組" : "托架前行輪組(40度)";
                 let b_norm = (rollerType === 'chain') ? "吊鏈式回程滾輪組(一般)" : "吊片式回程滾輪組(一般)";
                 let b_spir = (rollerType === 'chain') ? "吊鏈式回程滾輪組(螺旋)" : "吊片式回程滾輪組(螺旋)";
-                
+
                 let fCount = (type === 'main') ? Math.floor((length - 7000) / 1000) : Math.floor((length - 4000) / 1000);
                 let bCount = Math.floor((length - 2000) / 2000);
 
@@ -386,182 +396,245 @@
             }
 
             if (type === 'main') {
-                addMI("托架緩衝輪組(40度)", 8 * qty); 
+                addMI("托架緩衝輪組(40度)", 8 * qty);
                 addMI("托架前行輪組(40度)", 3 * qty);
-                addMI("托架前行輪組(35度)", 1 * qty); 
+                addMI("托架前行輪組(35度)", 1 * qty);
                 addMI("托架前行輪組(30度)", 1 * qty);
             } else if (type === 'storage') {
-                addMI("托架緩衝輪組(40度)", 2 * qty); 
+                addMI("托架緩衝輪組(40度)", 2 * qty);
                 addMI("托架前行輪組(40度)", 1 * qty);
-                addMI("托架緩衝輪組(35度)", 1 * qty); 
+                addMI("托架緩衝輪組(35度)", 1 * qty);
                 addMI("托架緩衝輪組(30度)", 1 * qty);
             } else if (type === 'sorting') {
-                addMI("托架緩衝輪組(30度)", 2 * qty); 
+                addMI("托架緩衝輪組(30度)", 2 * qty);
                 addMI("托架緩衝輪組(25度)", 1 * qty);
-                addMI("托架前行輪組(30度)", 1 * qty); 
+                addMI("托架前行輪組(30度)", 1 * qty);
                 addMI("自動調心前進滾輪組(25度-單向)", 1 * qty);
-                addMI("吊片式回程滾輪組(一般)", 1 * qty); 
+                addMI("吊片式回程滾輪組(一般)", 1 * qty);
                 addMI("吊片式回程滾輪組(螺旋)", 1 * qty);
             }
 
-            addMI(beltKey, beltLengthDisplay, true);
+            addMI(beltKey, beltLength, true);
 
-            detailHtml += `<h4>🔥 ${name} [${beltWidth}]</h4><table><tr><th>組件名稱</th><th>數量</th><th>單位</th><th>備註</th></tr>`;
-            machineItems.forEach(item => {
-                detailHtml += `<tr><td>${item.name}</td><td>${item.count}</td><td>${item.unit}</td><td></td></tr>`;
-                processBOM(item, partMap, beltWidth);
+            const title = `🔥 ${name} [${beltWidth}]`;
+            detailGroups.push({ title, isSpare: false, items: machineItems });
+
+            detailHtml += `<h4>${title}</h4><table><tr><th>組件名稱</th><th>數量</th><th>單位</th><th>備註</th></tr>`;
+            machineItems.forEach(mi => {
+                detailHtml += `<tr><td>${mi.name}</td><td>${fmtCount(mi.count, mi.unit)}</td><td>${mi.unit}</td><td></td></tr>`;
+                processBOM(mi, partMap, beltWidth, name);
             });
             detailHtml += `</table>`;
         });
 
         if (hasSparesTriggered) {
-            let spareItems = [];
-            spareItems.push({ name: `${lastWidthForSpares}吊鏈式回程滾輪組(一般)`, count: 2, unit: "組", isSpare: true });
-            spareItems.push({ name: `${lastWidthForSpares}托架前行輪組(40度)`, count: 1, unit: "組", isSpare: true });
-            spareItems.push({ name: `${lastWidthForSpares}托架緩衝輪組(40度)`, count: 1, unit: "組", isSpare: true });
+            let spareItems = [
+                { uid: ++uidSeq, name: `${lastWidthForSpares}吊鏈式回程滾輪組(一般)`, count: 2, unit: "組", remark: "備用", isSpare: true },
+                { uid: ++uidSeq, name: `${lastWidthForSpares}托架前行輪組(40度)`, count: 1, unit: "組", remark: "備用", isSpare: true },
+                { uid: ++uidSeq, name: `${lastWidthForSpares}托架緩衝輪組(40度)`, count: 1, unit: "組", remark: "備用", isSpare: true }
+            ];
+            const title = "🛠️ 專案統一備品項目";
+            detailGroups.push({ title, isSpare: true, items: spareItems });
 
-            detailHtml += `<h4>🛠️ 專案統一備品項目</h4><table><tr><th>組件名稱</th><th>數量</th><th>單位</th><th>備註</th></tr>`;
-            spareItems.forEach(item => {
-                detailHtml += `<tr><td>${item.name}</td><td>${item.count}</td><td>${item.unit}</td><td>備用</td></tr>`;
-                processBOM(item, partMap, lastWidthForSpares);
+            detailHtml += `<h4>${title}</h4><table><tr><th>組件名稱</th><th>數量</th><th>單位</th><th>備註</th></tr>`;
+            spareItems.forEach(si => {
+                detailHtml += `<tr><td>${si.name}</td><td>${si.count}</td><td>${si.unit}</td><td>備用</td></tr>`;
+                processBOM(si, partMap, lastWidthForSpares, "");
             });
             detailHtml += `</table>`;
         }
 
         document.getElementById('detailContent').innerHTML = detailHtml;
 
-        let sortedBOM = Object.values(partMap).sort((a, b) => {
-            if (a.isSpare !== b.isSpare) return a.isSpare ? 1 : -1; 
+        // 排序：輸送皮帶（依帶運機順序）→ 一般配件（依名稱）→ 備品
+        const rank = p => p.isBelt ? 0 : (p.isSpare ? 2 : 1);
+        summaryParts = Object.values(partMap).sort((a, b) => {
+            if (rank(a) !== rank(b)) return rank(a) - rank(b);
+            if (a.isBelt) return a.seq - b.seq;
             return a.name.localeCompare(b.name);
         });
 
         let summaryHtml = `<table><tr><th>配件名稱</th><th>數量</th><th>單位</th><th>備註</th></tr>`;
-        excelData = []; 
-        sortedBOM.forEach(p => {
-            const countVal = p.unit === "M" ? (typeof p.count === 'string' ? p.count : p.count.toFixed(2)) : p.count;
-            const remark = p.isSpare ? "備用" : "";
-            summaryHtml += `<tr><td>${p.name}</td><td>${countVal}</td><td>${p.unit}</td><td>${remark}</td></tr>`;
-            excelData.push({ name: p.name, count: countVal, unit: p.unit, remark: remark });
+        summaryParts.forEach(p => {
+            summaryHtml += `<tr><td>${p.name}</td><td>${fmtCount(p.count, p.unit)}</td><td>${p.unit}</td><td>${p.remark}</td></tr>`;
         });
         document.getElementById('summaryContent').innerHTML = summaryHtml + `</table>`;
         document.getElementById('resultWrapper').style.display = "block";
     }
 
-    function processBOM(item, partMap, prefix) {
-        if (item.count === "") return;
+    // 將第一頁的組件拆解為配件，並記錄「來源列 × 倍數」，供 Excel 連動公式使用
+    function processBOM(item, partMap, prefix, machineName) {
         const pureName = item.name.replace(prefix, "");
-        const num = parseFloat(item.count);
+        const num = (item.count === null || item.count === "") ? null : parseFloat(item.count);
 
-        const addPart = (partName, pCount, pUnit, isSp) => {
-            const key = `${partName}_${isSp ? 'spare' : 'norm'}`;
+        const addPart = (partName, mult, pUnit, opts = {}) => {
+            const isSp = !!item.isSpare;
+            const key = opts.key || `${partName}_${isSp ? 'spare' : 'norm'}`;
             if (!partMap[key]) {
-                partMap[key] = { name: partName, count: 0, unit: pUnit, isSpare: isSp };
+                partMap[key] = {
+                    name: partName, count: null, unit: pUnit, isSpare: isSp,
+                    isBelt: !!opts.isBelt, remark: opts.remark !== undefined ? opts.remark : (isSp ? "備用" : ""),
+                    refs: [], seq: Object.keys(partMap).length
+                };
             }
-            partMap[key].count += pCount;
+            const p = partMap[key];
+            if (num !== null) p.count = Math.round(((p.count || 0) + num * mult) * 100) / 100;
+            p.refs.push({ uid: item.uid, mult: mult });
         };
 
         if (item.name.includes("皮帶")) {
-            addPart(item.name, num, "M", item.isSpare);
-        } else {
-            if (pureName.includes("吊片式")) {
-                addPart(item.name, num, "組", item.isSpare);
-                addPart(prefix + "吊片", num * 2, "片", item.isSpare);
-            } else if (pureName.includes("吊鏈式")) {
-                addPart(item.name, num, "組", item.isSpare);
-                let hook = pureName.includes("前行") ? "吊鍊式前行輪掛勾" : "吊鍊式回程輪掛勾";
-                addPart(prefix + hook, num * 2, "只", item.isSpare);
-            } else if (pureName.includes("托架") || pureName.includes("自動調心")) {
-                let degMatch = pureName.match(/\d+度/);
-                let deg = degMatch ? degMatch[0] : "40度";
-                let bracketType = pureName.includes("自動調心") ? "自動調心前進滾輪組支架" : "前進滾輪組支架";
-                addPart(`${prefix}${bracketType}(${deg})`, num, "支", item.isSpare);
-                let rType = pureName.includes("緩衝") ? "前進滾輪(緩衝)" : "前進滾輪(一般)";
-                addPart(prefix + rType, num * 3, "顆", item.isSpare);
-                if(pureName.includes("自動調心")) addPart(prefix + "側擋輪", num * 2, "顆", item.isSpare);
-            }
+            // 輸送皮帶不合併：每條帶運機各自一列，備註註明帶運機名稱
+            addPart(item.name, 1, "M", { key: `belt_${item.uid}`, isBelt: true, remark: machineName });
+        } else if (pureName.includes("吊片式")) {
+            addPart(item.name, 1, "組");
+            addPart(prefix + "吊片", 2, "片");
+        } else if (pureName.includes("吊鏈式")) {
+            addPart(item.name, 1, "組");
+            let hook = pureName.includes("前行") ? "吊鍊式前行輪掛勾" : "吊鍊式回程輪掛勾";
+            addPart(prefix + hook, 2, "只");
+        } else if (pureName.includes("托架") || pureName.includes("自動調心")) {
+            let degMatch = pureName.match(/\d+度/);
+            let deg = degMatch ? degMatch[0] : "40度";
+            let bracketType = pureName.includes("自動調心") ? "自動調心前進滾輪組支架" : "前進滾輪組支架";
+            addPart(`${prefix}${bracketType}(${deg})`, 1, "支");
+            let rType = pureName.includes("緩衝") ? "前進滾輪(緩衝)" : "前進滾輪(一般)";
+            addPart(prefix + rType, 3, "顆");
+            if (pureName.includes("自動調心")) addPart(prefix + "側擋輪", 2, "顆");
         }
     }
 
-    function exportToExcel() {
-        const wb = XLSX.utils.book_new();
-        
-        const pNo = document.getElementById('globalProjNo').value || "無";
-        const pName = document.getElementById('globalProjName').value || "無";
-        const prep = document.getElementById('globalPreparer').value || "無";
-        const date = document.getElementById('globalDate').value || "";
+    // ===== Excel 匯出（ExcelJS：格線、合併儲存格、跨頁連動公式） =====
+    const SHEET_DETAIL = "輸送帶滾輪明細";
+    const SHEET_SUMMARY = "配件統計表";
+    const THIN = { style: 'thin', color: { argb: 'FF000000' } };
+    const BORDER_ALL = { top: THIN, left: THIN, bottom: THIN, right: THIN };
+
+    function setupSheet(ws, subtitle, firstColTitle, info) {
+        ws.columns = [{ width: 50 }, { width: 20 }, { width: 20 }, { width: 20 }];
+
+        ws.getCell('A1').value = "何鑫實業股份有限公司";
+        ws.mergeCells('A1:D1');
+        ws.getCell('A1').font = { bold: true, size: 16 };
+        ws.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
+
+        ws.getCell('A2').value = subtitle;
+        ws.mergeCells('A2:D2');
+        ws.getCell('A2').font = { bold: true, size: 13 };
+        ws.getCell('A2').alignment = { horizontal: 'center', vertical: 'middle' };
+
+        ws.getCell('A3').value = `工案名稱: ${info.pName}`;
+        ws.mergeCells('A3:B3');
+        ws.getCell('C3').value = `工案號碼: ${info.pNo}`;
+        ws.mergeCells('C3:D3');
+        ws.getCell('A4').value = `填表人: ${info.prep}`;
+        ws.mergeCells('A4:B4');
+        ws.getCell('C4').value = `日期: ${info.date}`;
+        ws.mergeCells('C4:D4');
+        ['A3', 'C3', 'A4', 'C4'].forEach(a => ws.getCell(a).alignment = { horizontal: 'left', vertical: 'middle' });
+
+        const hdr = ws.getRow(6);
+        [firstColTitle, "數量", "單位", "備註"].forEach((t, i) => {
+            const c = hdr.getCell(i + 1);
+            c.value = t;
+            c.font = { bold: true };
+            c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9D9D9' } };
+            c.alignment = { horizontal: 'center', vertical: 'middle' };
+        });
+
+        // 列印設定：A4 直式、寬度縮成一頁、每頁重複表頭
+        ws.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+                         printTitlesRow: '1:6', horizontalCentered: true };
+    }
+
+    function writeDataRow(ws, r, name, countCell, unit, remark) {
+        const row = ws.getRow(r);
+        row.getCell(1).value = name;
+        if (countCell !== null && countCell !== undefined && countCell !== "") row.getCell(2).value = countCell;
+        row.getCell(3).value = unit;
+        row.getCell(4).value = remark || null;
+        row.getCell(2).numFmt = unit === "M" ? '0.00' : '0';
+        row.getCell(2).alignment = { horizontal: 'center', vertical: 'middle' };
+        row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
+        row.getCell(4).alignment = { horizontal: 'center', vertical: 'middle' };
+    }
+
+    function finishSheet(ws, lastRow) {
+        for (let r = 1; r <= lastRow; r++) {
+            const row = ws.getRow(r);
+            row.height = 20;
+            for (let c = 1; c <= 4; c++) row.getCell(c).border = BORDER_ALL;
+        }
+    }
+
+    async function exportToExcel() {
+        if (!detailGroups.length) { alert("請先點擊「生成數據」"); return; }
+
+        const info = {
+            pNo: document.getElementById('globalProjNo').value || "無",
+            pName: document.getElementById('globalProjName').value || "無",
+            prep: document.getElementById('globalPreparer').value || "無",
+            date: document.getElementById('globalDate').value || ""
+        };
+
+        const wb = new ExcelJS.Workbook();
 
         // --- 工作表1：輸送帶滾輪明細 ---
-        const detailRows = [
-            ["何鑫實業股份有限公司"],
-            ["帶運機滾輪統計表 估算單 (明細)"],
-            [`工案名稱: ${pName}`, `工案號碼: ${pNo}`],
-            [`填表人: ${prep}`, `日期: ${date}`],
-            [],
-            ["組件名稱", "數量", "單位", "備註"]
-        ];
+        const ws1 = wb.addWorksheet(SHEET_DETAIL);
+        setupSheet(ws1, "帶運機滾輪統計表 估算單 (明細)", "組件名稱", info);
 
-        const tables = document.querySelectorAll('#detailContent table');
-        const h4s = document.querySelectorAll('#detailContent h4');
-        
-        let normalTables = [];
-        let spareTable = null;
+        const uidRow = {};   // 第一頁每個組件所在的列號
+        let r = 7;
+        detailGroups.forEach(g => {
+            const titleRow = ws1.getRow(r);
+            titleRow.getCell(1).value = g.title;
+            if (g.isSpare) titleRow.getCell(4).value = "備用";
+            titleRow.getCell(4).alignment = { horizontal: 'center', vertical: 'middle' };
+            for (let c = 1; c <= 4; c++) {
+                titleRow.getCell(c).font = { bold: true };
+                titleRow.getCell(c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
+            }
+            r++;
+            g.items.forEach(it => {
+                uidRow[it.uid] = r;
+                writeDataRow(ws1, r, it.name, it.count, it.unit, it.remark);
+                r++;
+            });
+            r++; // 空一列
+        });
+        finishSheet(ws1, r - 2);
 
-        tables.forEach((table, idx) => {
-            let title = h4s[idx].innerText;
-            if (title.includes("備品")) {
-                spareTable = { title, table };
+        // --- 工作表2：配件統計表（數量以公式連動第一頁）---
+        const ws2 = wb.addWorksheet(SHEET_SUMMARY);
+        setupSheet(ws2, "配件統計表 (估算總計)", "配件名稱", info);
+
+        r = 7;
+        summaryParts.forEach(p => {
+            const terms = p.refs.map(ref => `'${SHEET_DETAIL}'!B${uidRow[ref.uid]}` + (ref.mult !== 1 ? `*${ref.mult}` : ''));
+            let formula, result;
+            if (p.isBelt) {
+                const src = terms[0];
+                formula = `IF(${src}="","",${src})`;
+                result = (p.count === null) ? "" : p.count;
             } else {
-                normalTables.push({ title, table });
+                formula = terms.join('+');
+                result = p.count === null ? 0 : p.count;
             }
+            writeDataRow(ws2, r, p.name, { formula: formula, result: result }, p.unit, p.remark);
+            r++;
         });
+        finishSheet(ws2, r - 1);
 
-        // 寫入正常項目
-        normalTables.forEach(item => {
-            detailRows.push([item.title, "", "", ""]);
-            const rows = item.table.querySelectorAll('tr');
-            for (let i = 1; i < rows.length; i++) {
-                const tds = rows[i].querySelectorAll('td');
-                detailRows.push([tds[0].innerText, tds[1].innerText, tds[2].innerText, tds[3].innerText]);
-            }
-            detailRows.push([]);
-        });
+        // 開啟檔案時強制重新計算
+        wb.calcProperties.fullCalcOnLoad = true;
 
-        // 寫入備品項目 (放在最下面)
-        if (spareTable) {
-            detailRows.push([spareTable.title, "", "", "備用"]);
-            const rows = spareTable.table.querySelectorAll('tr');
-            for (let i = 1; i < rows.length; i++) {
-                const tds = rows[i].querySelectorAll('td');
-                detailRows.push([tds[0].innerText, tds[1].innerText, tds[2].innerText, tds[3].innerText]);
-            }
-            detailRows.push([]);
-        }
-
-        const wsDetail = XLSX.utils.aoa_to_sheet(detailRows);
-        wsDetail['!cols'] = [{ wch: 50 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
-        wsDetail['!rows'] = Array(detailRows.length + 5).fill({ hpt: 20 });
-        XLSX.utils.book_append_sheet(wb, wsDetail, "輸送帶滾輪明細");
-
-        // --- 工作表2：配件統計表 ---
-        const summaryRows = [
-            ["何鑫實業股份有限公司"],
-            ["配件統計表 (估算總計)"],
-            [`工案名稱: ${pName}`, `工案號碼: ${pNo}`],
-            [`填表人: ${prep}`, `日期: ${date}`],
-            [],
-            ["配件名稱", "數量", "單位", "備註"]
-        ];
-
-        excelData.forEach(p => {
-            summaryRows.push([p.name, p.count, p.unit, p.remark]);
-        });
-
-        const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
-        wsSummary['!cols'] = [{ wch: 50 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
-        wsSummary['!rows'] = Array(summaryRows.length + 5).fill({ hpt: 20 });
-        XLSX.utils.book_append_sheet(wb, wsSummary, "配件統計表");
-
-        XLSX.writeFile(wb, `何鑫估算_${pNo}_${new Date().toLocaleDateString()}.xlsx`);
+        const buffer = await wb.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `何鑫估算_${info.pNo}_${new Date().toLocaleDateString().replace(/\//g, '_')}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
     }
 </script>
 </body>
